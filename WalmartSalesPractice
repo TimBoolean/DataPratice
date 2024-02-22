@@ -1,0 +1,49 @@
+-- Find the highest weekly sale based on cpi, unemployment, and year
+
+With CTE as(
+Select CPI,Unemployment, year(date), max(weekly_sales) as Dollar_amount
+from sales
+group by 1,2,3
+order by dollar_amount desc)
+
+Select row_number() over(order by dollar_amount desc) as Ranking,
+CPI,
+Unemployment,
+Dollar_amount
+from CTE
+limit 1
+;
+
+-- Lowest weekly sales based on cpi, unemployment, and year
+
+With CTE as(
+Select CPI,Unemployment, min(weekly_sales) as Dollar_amount
+from sales
+group by 1,2)
+
+Select row_number() over(order by dollar_amount asc) as Ranking,
+CPI,
+Unemployment,
+Dollar_amount
+from CTE
+;
+
+-- Unemployment relationship with avg sale by year
+
+Select year(date) as Year, Round(avg(weekly_sales),1) as avg_sales,
+case
+when unemployment >= 5.0 then 'High_unemployment'
+when unemployment <= 3 then 'Low_unemployment'
+Else 'Normal_unemployment'
+End as Unemployment_status
+from sales
+group by 1,3
+order by 2;
+
+-- Holiday weeks impact on avg sales by Month
+
+select count(holiday_flag) as Holiday_weeks, month(date) as Month, round(avg(weekly_sales),1) as avg_weekly_sales
+from sales
+where holiday_flag > 0
+group by 2
+order by 3 desc;
